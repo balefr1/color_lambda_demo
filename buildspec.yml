@@ -1,0 +1,27 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Installing source NPM dependencies...
+      - cd src
+      - npm install
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo "Linting code, Running unit & integration tests, Running dependency scan, Running code quality scan"
+      #this is just a demo, so none of the above steps is actually done here. Please ALWAYS consider to add those to your CI pipeline!
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - cp ../lambda_deploy_buildspec.yml .
+      - cp ../check_lambda_status.sh .
+artifacts:
+  files:
+    - main.js
+    - index.html
+    - node_modules/**/*
+    - lambda_deploy_buildspec.yml
+    - check_lambda_status.sh
+  base-directory: 'src'
+  name: color-lambda_$CODEBUILD_RESOLVED_SOURCE_VERSION

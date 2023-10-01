@@ -1,0 +1,93 @@
+<html>
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+        <title>HackersGen colors test</title>
+
+    </head>
+    <body>
+        <h1> Colors test</h1>
+        <hr>
+        errors
+        <input id="errors" type="textbox">
+        total
+        <input id="total" type="textbox">
+        <!-- <button id="json">json</button> -->
+        <hr>
+        <ul id="testList">
+
+        </ul>
+    </body>
+</html>
+
+<script type="text/javascript">
+    var errCnt = 0;
+    var totalCnt = 0;
+    var dotsOnCurrLine = 1;
+    var currLine = 0;
+    var start = 0;
+    var combinationCounter = {};
+
+    function combinationCounterF(combination){
+        if (combination in combinationCounter){
+            combinationCounter[combination]=combinationCounter[combination]+1
+        } else {
+            combinationCounter[combination]=1  
+        }
+    }
+
+    function incomingSymbol(symbol,color){
+        size = "100px"
+        if (symbol == ""){
+            errCnt++;
+            $("#errors").val(errCnt)
+            color = "red"
+            symbol = "❌"
+            size = "70px"
+        } else {
+            totalCnt++;
+            $("#total").val(totalCnt)
+            combinationCounterF(btoa(unescape(encodeURIComponent(symbol))+color))
+        }
+        if (totalCnt % 10 == 0 ){
+            //console.log(combinationCounter)
+            combTotal = 0;
+            Object.keys(combinationCounter).forEach(key => {
+                combTotal += combinationCounter[key];
+            });
+            console.log(combTotal)
+            Object.keys(combinationCounter).forEach(key => {
+                perc = combinationCounter[key] / combTotal *100
+                console.log(key+" -> "+perc)
+            });
+        }
+
+        if (start == 0 || dotsOnCurrLine >= 10) {
+                dotsOnCurrLine=0;
+                currLine++;
+                if (currLine > 4) {
+                    currLine = 1
+                    $("#testList").html("")
+                }
+                $("#testList").append('<li id="lines-'+currLine+'"> </li>');  
+            }   
+        if (start == 0){
+            start = 1;
+        }
+        dotsOnCurrLine++;   
+        currLnHtml=$("#lines-"+currLine).html()
+
+        $("#lines-"+currLine).html(currLnHtml+'<div style="color:'+color+';overflow:auto;border: 2mm ridge rgba(211, 220, 50, .6);display: inline-block;font-size:'+size+'">'+symbol+'</div>');  
+    }
+
+    function getData(){ 
+        $.getJSON(window.location.href+"color",
+         function(data) {
+           // console.log(data);
+           incomingSymbol(data.symbol,data.color);
+          }).fail(function() { 
+            incomingSymbol("","");
+           });   
+    }
+
+    setInterval(getData, 250);
+</script>

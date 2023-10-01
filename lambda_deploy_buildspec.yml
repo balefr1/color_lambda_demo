@@ -1,0 +1,40 @@
+version: 0.2
+env:
+  variables:
+    LAMBDA_NAME: ""
+    LAMBDA_ALIAS_NAME: "LIVE"
+phases:
+  pre_build:
+    commands:
+      - | 
+        cat <<EOF > appspec.yml
+        version: 0.0
+        Resources:
+          - myLambdaFunction:
+              Type: AWS::Lambda::Function
+              Properties:
+                Name: "%functionName%"
+                Alias: "%aliasName%"
+                CurrentVersion: "%currentVersion%"
+                TargetVersion: "%targetVersion%"
+        EOF
+  build:
+    commands:
+      - echo Build started on `date`
+      - zip -q -x *.yaml -x *.sh -x *.yml -r lambda_package.zip .
+      #update function code, wait until function is updated, publish a new version, then create appspec.yml file containing current and wanted function versions
+      - aws lambda update-function-code --region=$AWS_REGION --function-name $LAMBDA_NAME --zip-file fileb://lambda_package.zip
+      - chmod +x check_lambda_status.sh && ./check_lambda_status.sh $LAMBDA_NAME
+      - newVersion=$(aws lambda publish-version --region=$AWS_REGION --function-name $LAMBDA_NAME --query Version --output text)
+      - currentVersion=$(aws lambda get-alias --region=$AWS_REGION --function-name $LAMBDA_NAME --name $LAMBDA_ALIAS_NAME --query FunctionVersion --output text)
+      #replace placeholder values in appspec.yml template
+      - sed -i "s/%currentVersion%/${currentVersion}/g" appspec.yml
+      - sed -i "s/%targetVersion%/${newVersion}/g" appspec.yml
+      - sed -i "s/%functionName%/${LAMBDA_NAME}/g" appspec.yml
+      - sed -i "s/%aliasName%/${LAMBDA_ALIAS_NAME}/g" appspec.yml
+  post_build:
+    commands:
+      - echo Build completed on `date`
+artifacts:
+  files:
+    - appspec.yml

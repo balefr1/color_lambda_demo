@@ -1,0 +1,15 @@
+Description: Golang whitelist api template
+
+Resources:
+  SampleApp:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs18.x
+      Handler: main.js
+      Timeout: 15
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: "/{proxy+}"
+            Method: ANY
