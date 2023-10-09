@@ -14,7 +14,7 @@ app.use(cors({
 var rqs = 0;
 var fakeErr = false;
 var colorChg = false;
-var color = "orange";
+var color = "blue";
 var symbol = "◉";
 
 app.get("/",function (req, res) {
